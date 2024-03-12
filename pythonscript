@@ -1,0 +1,77 @@
+# project4.py
+import os
+
+
+def scan_file(file_path):
+    # List of known malware signatures
+    malware_signatures = ["89C3 B440 8A2E 2004 8A0E 2104 BA00 05CD 21E8 D500 BF50 04CD",
+                          "B440 B9E8 0133 D2CD 2172 1126 8955 15B4 40B9 0500 BA5A 01CD",
+                          "8B96 0906 B000 E85C FF8B D5B9 D303 E864 FFC6 8602 0401 F8C3"]
+
+    # Read the content of the file
+    with open(file_path, 'rb') as file:
+        content = file.read()
+
+    # Check if any malware signature is present in the file content
+    for signature in malware_signatures:
+        if signature.encode('utf-8') in content:
+            return True
+
+    return False
+
+
+def scan_directory(directory):
+    results = []
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            file_path = os.path.join(root, file)
+            results.append(file_path)
+    return results
+
+
+def scan_file_wrapper(file_path):
+    if scan_file(file_path):
+        return (file_path, "Malware detected")
+    else:
+        return (file_path, "No malware detected")
+
+
+def generate_report(results, report_file):
+    with open(report_file, 'w') as report:
+        report.write("Malware Scan Report:\n")
+        report.write("=====================\n\n")
+        for result in results:
+            if len(result) >= 2:
+                file_path, status = result[:2]  # Unpack the first two elements
+                report.write(f"File: {file_path}\n")
+                if status == "Malware detected":
+                    report.write("Status: Malware detected\n")
+                else:
+                    report.write("Status: No malware detected\n")
+                report.write("\n")
+
+def main():
+    target_directory = input("Enter the directory to scan: ")
+    if not os.path.isdir(target_directory):
+        print("Invalid directory path.")
+        return
+
+    print("Scanning for Accom.1280, Die.448, and Xany.979 in:", target_directory)
+    scan_results = scan_directory(target_directory)
+
+    try:
+        report_dir = input("Enter the directory to save the report: ")
+        if not os.path.isdir(report_dir):
+            os.makedirs(report_dir)
+        report_file = os.path.join(report_dir, "malware_scan_report.txt")
+    except Exception as e:
+        print("Error occurred while specifying the report directory:", e)
+        return
+
+    generate_report(scan_results, report_file)
+
+    print("Scan complete. Report generated at:", report_file)
+
+
+if __name__ == "__main__":
+    main()
